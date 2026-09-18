@@ -1,0 +1,763 @@
+<!DOCTYPE html>
+<!-- saved from url=(0012)about:srcdoc -->
+<html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Brick Breaker — Neon Red</title>
+<link rel="preconnect" href="https://fonts.googleapis.com/">
+<link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin="">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;700;800&amp;family=Rajdhani:wght@500;600;700&amp;display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://www.codechef.com/style.css">
+</head>
+<body>
+
+  <div class="stage">
+
+    <header class="hud">
+      <h1 class="title">BRICK<span class="title-gap"></span>BREAKER</h1>
+
+      <div class="hud-stats">
+        <div class="stat-card">
+          <span class="stat-label">Score</span>
+          <span class="stat-value" id="scoreValue">60</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-label">Lives</span>
+          <span class="stat-value" id="livesValue">0</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-label">Level</span>
+          <span class="stat-value" id="levelValue">1</span>
+        </div>
+      </div>
+    </header>
+
+    <main class="board">
+      <div class="canvas-frame">
+        <canvas id="gameCanvas" width="720" height="480"></canvas>
+
+        <div class="overlay hidden" id="overlayStart">
+          <p class="overlay-eyebrow">Ready</p>
+          <h2 class="overlay-title">Break every brick</h2>
+          <p class="overlay-copy">Move the paddle with the arrow keys, your mouse, or your finger. Three lives. Every hit counts.</p>
+          <button class="btn btn-primary" id="btnOverlayStart">Start Game</button>
+        </div>
+
+        <div class="overlay hidden" id="overlayPause">
+          <p class="overlay-eyebrow">Paused</p>
+          <h2 class="overlay-title">Take a breath</h2>
+          <button class="btn btn-primary" id="btnOverlayResume">Resume</button>
+        </div>
+
+        <div class="overlay" id="overlayGameOver">
+          <p class="overlay-eyebrow">Game Over</p>
+          <h2 class="overlay-title" id="gameOverScore">You scored 60</h2>
+          <p class="overlay-copy">Every run gets faster. Try again.</p>
+          <button class="btn btn-primary" id="btnOverlayRestartFromLoss">Restart</button>
+        </div>
+
+        <div class="overlay hidden" id="overlayWin">
+          <p class="overlay-eyebrow">Victory</p>
+          <h2 class="overlay-title" id="winScore">Board cleared</h2>
+          <p class="overlay-copy">Level complete. The next board is faster.</p>
+          <button class="btn btn-primary" id="btnOverlayNext">Next Level</button>
+        </div>
+      </div>
+    </main>
+
+    <footer class="controls">
+      <button class="btn btn-ghost" id="btnStart">Start Game</button>
+      <button class="btn btn-ghost" id="btnPause" disabled="">Pause</button>
+      <button class="btn btn-ghost" id="btnRestart">Restart</button>
+    </footer>
+
+  </div>
+
+<script src="https://www.codechef.com/script.js"></script>
+
+
+<style>
+/* ============================================
+   BRICK BREAKER — PREMIUM NEON RED THEME
+   ============================================ */
+
+:root {
+  /* Core palette */
+  --bg: #050505;
+  --neon-red: #FF003C;
+  --dark-red: #B00020;
+  --accent-red: #FF4D6D;
+  --border-glow: #FF1744;
+  --white: #FFFFFF;
+  --text-secondary: #BBBBBB;
+
+  /* Derived surfaces */
+  --glass-fill: rgba(255, 255, 255, 0.04);
+  --glass-border: rgba(255, 23, 68, 0.35);
+  --panel-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+
+  /* Type */
+  --font-display: 'Orbitron', sans-serif;
+  --font-body: 'Rajdhani', sans-serif;
+
+  /* Radius */
+  --radius-lg: 20px;
+  --radius-md: 12px;
+  --radius-sm: 8px;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  min-height: 100vh;
+  background: var(--bg);
+  background-image:
+    linear-gradient(rgba(255, 0, 60, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 0, 60, 0.05) 1px, transparent 1px);
+  background-size: 40px 40px;
+  color: var(--white);
+  font-family: var(--font-body);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.stage {
+  width: 100%;
+  max-width: 780px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* ---------- Header / HUD ---------- */
+
+.hud {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.title {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: clamp(22px, 4vw, 32px);
+  letter-spacing: 3px;
+  color: var(--white);
+  text-shadow: 0 0 12px var(--border-glow), 0 0 28px rgba(255, 23, 68, 0.4);
+}
+
+.title-gap {
+  display: inline-block;
+  width: 12px;
+}
+
+.hud-stats {
+  display: flex;
+  gap: 12px;
+}
+
+.stat-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 76px;
+  padding: 8px 16px;
+  background: var(--glass-fill);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.stat-label {
+  font-size: 12px;
+  color: var(--text-secondary);
+  letter-spacing: 1px;
+}
+
+.stat-value {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--accent-red);
+}
+
+/* ---------- Board / Canvas ---------- */
+
+.board {
+  display: flex;
+  justify-content: center;
+}
+
+.canvas-frame {
+  position: relative;
+  border-radius: var(--radius-lg);
+  border: 3px solid var(--border-glow);
+  box-shadow: 0 0 0 1px rgba(255, 23, 68, 0.25), 0 0 30px rgba(255, 23, 68, 0.35), var(--panel-shadow);
+  overflow: hidden;
+  width: 100%;
+  max-width: 720px;
+  aspect-ratio: 720 / 480;
+}
+
+#gameCanvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: #0A0A0A;
+}
+
+/* ---------- Overlays ---------- */
+
+.overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 32px;
+  gap: 12px;
+  background: rgba(5, 5, 5, 0.86);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+.overlay.hidden {
+  display: none;
+}
+
+.overlay-eyebrow {
+  font-family: var(--font-display);
+  font-size: 13px;
+  letter-spacing: 4px;
+  color: var(--dark-red);
+}
+
+.overlay-title {
+  font-family: var(--font-display);
+  font-size: clamp(20px, 4vw, 28px);
+  font-weight: 700;
+  color: var(--white);
+  text-shadow: 0 0 16px rgba(255, 0, 60, 0.5);
+  max-width: 420px;
+}
+
+.overlay-copy {
+  font-size: 16px;
+  color: var(--text-secondary);
+  max-width: 360px;
+  line-height: 1.5;
+}
+
+/* ---------- Buttons ---------- */
+
+.btn {
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 15px;
+  letter-spacing: 0.5px;
+  padding: 12px 28px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: transform 0.12s ease, background 0.15s ease, color 0.15s ease;
+}
+
+.btn-primary {
+  margin-top: 6px;
+  background: var(--neon-red);
+  border: 1px solid var(--neon-red);
+  color: var(--white);
+  box-shadow: 0 0 18px rgba(255, 0, 60, 0.55);
+}
+
+.btn-primary:hover {
+  background: var(--dark-red);
+  border-color: var(--dark-red);
+}
+
+.btn-primary:active {
+  transform: scale(0.97);
+}
+
+.btn-ghost {
+  background: var(--glass-fill);
+  border: 1px solid var(--glass-border);
+  color: var(--white);
+}
+
+.btn-ghost:hover {
+  border-color: var(--neon-red);
+  color: var(--accent-red);
+}
+
+.btn-ghost:active {
+  transform: scale(0.97);
+}
+
+.btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* ---------- Controls ---------- */
+
+.controls {
+  display: flex;
+  justify-content: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+/* ---------- Responsive ---------- */
+
+@media (max-width: 640px) {
+  .hud {
+    justify-content: center;
+    text-align: center;
+  }
+
+  .stat-card {
+    min-width: 64px;
+    padding: 6px 10px;
+  }
+
+  .controls .btn {
+    padding: 10px 20px;
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 420px) {
+  .hud-stats {
+    gap: 8px;
+  }
+}</style>
+<script>
+/* ============================================
+   BRICK BREAKER — PREMIUM NEON RED THEME
+   Vanilla JS game logic, 60 FPS via requestAnimationFrame
+   ============================================ */
+
+(function () {
+  "use strict";
+
+  // ---------- Canvas setup ----------
+  var canvas = document.getElementById("gameCanvas");
+  var ctx = canvas.getContext("2d");
+
+  // Logical (internal) resolution stays fixed; CSS scales the element.
+  var LOGICAL_WIDTH = canvas.width;   // 720
+  var LOGICAL_HEIGHT = canvas.height; // 480
+
+  // ---------- Colors ----------
+  var COLORS = {
+    neonRed: "#FF003C",
+    darkRed: "#B00020",
+    accentRed: "#FF4D6D",
+    borderGlow: "#FF1744",
+    white: "#FFFFFF",
+    secondary: "#BBBBBB",
+    bg: "#0A0A0A"
+  };
+
+  // Multiple shades of red for brick rows
+  var BRICK_SHADES = ["#FF1744", "#DC143C", "#FF2400", "#B00020", "#E0115F"];
+  // Bright Red, Crimson, Scarlet, Deep Red, Ruby
+
+  // ---------- DOM refs ----------
+  var scoreValueEl = document.getElementById("scoreValue");
+  var livesValueEl = document.getElementById("livesValue");
+  var levelValueEl = document.getElementById("levelValue");
+
+  var overlayStart = document.getElementById("overlayStart");
+  var overlayPause = document.getElementById("overlayPause");
+  var overlayGameOver = document.getElementById("overlayGameOver");
+  var overlayWin = document.getElementById("overlayWin");
+  var gameOverScoreEl = document.getElementById("gameOverScore");
+  var winScoreEl = document.getElementById("winScore");
+
+  var btnStart = document.getElementById("btnStart");
+  var btnPause = document.getElementById("btnPause");
+  var btnRestart = document.getElementById("btnRestart");
+  var btnOverlayStart = document.getElementById("btnOverlayStart");
+  var btnOverlayResume = document.getElementById("btnOverlayResume");
+  var btnOverlayRestartFromLoss = document.getElementById("btnOverlayRestartFromLoss");
+  var btnOverlayNext = document.getElementById("btnOverlayNext");
+
+  // ---------- Game state ----------
+  var STATE = {
+    IDLE: "idle",
+    RUNNING: "running",
+    PAUSED: "paused",
+    GAME_OVER: "gameover",
+    WON: "won"
+  };
+
+  var state = STATE.IDLE;
+
+  var score = 0;
+  var lives = 3;
+  var level = 1;
+
+  var ballRadius = 9;
+  var paddleHeight = 12;
+  var paddleWidth = 100;
+  var paddleX = (LOGICAL_WIDTH - paddleWidth) / 2;
+
+  var baseSpeed = 4;
+  var x, y, dx, dy;
+
+  var rightPressed = false;
+  var leftPressed = false;
+
+  var brickRowCount = 5;
+  var brickColumnCount = 8;
+  var brickPadding = 8;
+  var brickOffsetTop = 50;
+  var brickOffsetLeft = 20;
+  var brickWidth, brickHeight;
+
+  var bricks = [];
+  var bricksRemaining = 0;
+
+  // ---------- Helpers ----------
+  function resetBallAndPaddle() {
+    paddleWidth = 100;
+    paddleX = (LOGICAL_WIDTH - paddleWidth) / 2;
+    x = LOGICAL_WIDTH / 2;
+    y = LOGICAL_HEIGHT - 40;
+    var speed = baseSpeed + (level - 1) * 0.6;
+    dx = speed * (Math.random() < 0.5 ? -1 : 1);
+    dy = -speed;
+  }
+
+  function buildBricks() {
+    brickWidth = (LOGICAL_WIDTH - brickOffsetLeft * 2 - brickPadding * (brickColumnCount - 1)) / brickColumnCount;
+    brickHeight = 20;
+    bricks = [];
+    bricksRemaining = 0;
+    for (var c = 0; c < brickColumnCount; c++) {
+      bricks[c] = [];
+      for (var r = 0; r < brickRowCount; r++) {
+        bricks[c][r] = { x: 0, y: 0, status: 1 };
+        bricksRemaining++;
+      }
+    }
+  }
+
+  function updateHud() {
+    scoreValueEl.textContent = score;
+    livesValueEl.textContent = lives;
+    levelValueEl.textContent = level;
+  }
+
+  function hideAllOverlays() {
+    overlayStart.classList.add("hidden");
+    overlayPause.classList.add("hidden");
+    overlayGameOver.classList.add("hidden");
+    overlayWin.classList.add("hidden");
+  }
+
+  function setButtonsForState() {
+    if (state === STATE.RUNNING) {
+      btnStart.disabled = true;
+      btnPause.disabled = false;
+      btnPause.textContent = "Pause";
+    } else if (state === STATE.PAUSED) {
+      btnStart.disabled = true;
+      btnPause.disabled = false;
+      btnPause.textContent = "Resume";
+    } else {
+      btnStart.disabled = false;
+      btnPause.disabled = true;
+      btnPause.textContent = "Pause";
+    }
+  }
+
+  // ---------- Drawing ----------
+  function drawBall() {
+    ctx.beginPath();
+    ctx.arc(x, y, ballRadius, 0, Math.PI * 2);
+    ctx.fillStyle = COLORS.white;
+    ctx.shadowColor = "rgba(255,255,255,0.6)";
+    ctx.shadowBlur = 8;
+    ctx.fill();
+    ctx.shadowBlur = 0;
+    ctx.closePath();
+  }
+
+  function drawPaddle() {
+    var px = paddleX;
+    var py = LOGICAL_HEIGHT - paddleHeight - 6;
+    var r = 6;
+    ctx.beginPath();
+    ctx.moveTo(px + r, py);
+    ctx.arcTo(px + paddleWidth, py, px + paddleWidth, py + paddleHeight, r);
+    ctx.arcTo(px + paddleWidth, py + paddleHeight, px, py + paddleHeight, r);
+    ctx.arcTo(px, py + paddleHeight, px, py, r);
+    ctx.arcTo(px, py, px + paddleWidth, py, r);
+    ctx.closePath();
+    ctx.fillStyle = COLORS.neonRed;
+    ctx.shadowColor = "rgba(255,0,60,0.6)";
+    ctx.shadowBlur = 10;
+    ctx.fill();
+    ctx.shadowBlur = 0;
+  }
+
+  function drawBricks() {
+    for (var c = 0; c < brickColumnCount; c++) {
+      for (var r = 0; r < brickRowCount; r++) {
+        var b = bricks[c][r];
+        if (b.status === 1) {
+          var brickX = c * (brickWidth + brickPadding) + brickOffsetLeft;
+          var brickY = r * (brickHeight + brickPadding) + brickOffsetTop;
+          b.x = brickX;
+          b.y = brickY;
+
+          ctx.beginPath();
+          var rad = 4;
+          ctx.moveTo(brickX + rad, brickY);
+          ctx.arcTo(brickX + brickWidth, brickY, brickX + brickWidth, brickY + brickHeight, rad);
+          ctx.arcTo(brickX + brickWidth, brickY + brickHeight, brickX, brickY + brickHeight, rad);
+          ctx.arcTo(brickX, brickY + brickHeight, brickX, brickY, rad);
+          ctx.arcTo(brickX, brickY, brickX + brickWidth, brickY, rad);
+          ctx.closePath();
+          ctx.fillStyle = BRICK_SHADES[r % BRICK_SHADES.length];
+          ctx.fill();
+          ctx.strokeStyle = "rgba(0,0,0,0.25)";
+          ctx.lineWidth = 1;
+          ctx.stroke();
+        }
+      }
+    }
+  }
+
+  function clear() {
+    ctx.fillStyle = COLORS.bg;
+    ctx.fillRect(0, 0, LOGICAL_WIDTH, LOGICAL_HEIGHT);
+  }
+
+  // ---------- Collision ----------
+  function collisionDetection() {
+    for (var c = 0; c < brickColumnCount; c++) {
+      for (var r = 0; r < brickRowCount; r++) {
+        var b = bricks[c][r];
+        if (b.status === 1) {
+          if (x + ballRadius > b.x && x - ballRadius < b.x + brickWidth &&
+              y + ballRadius > b.y && y - ballRadius < b.y + brickHeight) {
+            dy = -dy;
+            b.status = 0;
+            bricksRemaining--;
+            score += 10;
+            updateHud();
+
+            if (bricksRemaining === 0) {
+              handleLevelWon();
+              return;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  function handleLevelWon() {
+    state = STATE.WON;
+    winScoreEl.textContent = "Score: " + score;
+    hideAllOverlays();
+    overlayWin.classList.remove("hidden");
+    setButtonsForState();
+  }
+
+  function handleGameOver() {
+    state = STATE.GAME_OVER;
+    gameOverScoreEl.textContent = "You scored " + score;
+    hideAllOverlays();
+    overlayGameOver.classList.remove("hidden");
+    setButtonsForState();
+  }
+
+  // ---------- Main loop ----------
+  function draw() {
+    if (state !== STATE.RUNNING) return;
+
+    clear();
+    drawBricks();
+    drawPaddle();
+    drawBall();
+    collisionDetection();
+
+    if (state !== STATE.RUNNING) {
+      requestAnimationFrame(draw);
+      return;
+    }
+
+    // Wall collisions (left/right)
+    if (x + dx > LOGICAL_WIDTH - ballRadius || x + dx < ballRadius) {
+      dx = -dx;
+    }
+    // Ceiling
+    if (y + dy < ballRadius) {
+      dy = -dy;
+    } else if (y + dy > LOGICAL_HEIGHT - ballRadius - paddleHeight - 6) {
+      // Near paddle height band
+      if (x > paddleX && x < paddleX + paddleWidth) {
+        // Reflect based on where it hit the paddle for a bit of control
+        var hitPos = (x - paddleX) / paddleWidth; // 0..1
+        var angle = (hitPos - 0.5) * 1.4; // -0.7..0.7 radians influence
+        var speed = Math.sqrt(dx * dx + dy * dy);
+        dx = speed * Math.sin(angle);
+        dy = -Math.abs(speed * Math.cos(angle));
+        if (Math.abs(dy) < 2) dy = dy < 0 ? -2 : 2;
+      } else if (y + dy > LOGICAL_HEIGHT - ballRadius) {
+        loseLife();
+        requestAnimationFrame(draw);
+        return;
+      }
+    }
+
+    x += dx;
+    y += dy;
+
+    if (rightPressed) {
+      paddleX += 6.5;
+      if (paddleX + paddleWidth > LOGICAL_WIDTH) paddleX = LOGICAL_WIDTH - paddleWidth;
+    } else if (leftPressed) {
+      paddleX -= 6.5;
+      if (paddleX < 0) paddleX = 0;
+    }
+
+    requestAnimationFrame(draw);
+  }
+
+  function loseLife() {
+    lives--;
+    updateHud();
+    if (lives <= 0) {
+      handleGameOver();
+    } else {
+      resetBallAndPaddle();
+    }
+  }
+
+  // ---------- Game control ----------
+  function newGame() {
+    score = 0;
+    lives = 3;
+    level = 1;
+    buildBricks();
+    resetBallAndPaddle();
+    updateHud();
+  }
+
+  function startGame() {
+    if (state === STATE.IDLE || state === STATE.GAME_OVER) {
+      newGame();
+    }
+    state = STATE.RUNNING;
+    hideAllOverlays();
+    setButtonsForState();
+    requestAnimationFrame(draw);
+  }
+
+  function togglePause() {
+    if (state === STATE.RUNNING) {
+      state = STATE.PAUSED;
+      hideAllOverlays();
+      overlayPause.classList.remove("hidden");
+      setButtonsForState();
+    } else if (state === STATE.PAUSED) {
+      state = STATE.RUNNING;
+      hideAllOverlays();
+      setButtonsForState();
+      requestAnimationFrame(draw);
+    }
+  }
+
+  function restartGame() {
+    newGame();
+    state = STATE.RUNNING;
+    hideAllOverlays();
+    setButtonsForState();
+    requestAnimationFrame(draw);
+  }
+
+  function nextLevel() {
+    level++;
+    buildBricks();
+    resetBallAndPaddle();
+    updateHud();
+    state = STATE.RUNNING;
+    hideAllOverlays();
+    setButtonsForState();
+    requestAnimationFrame(draw);
+  }
+
+  // ---------- Input ----------
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Right" || e.key === "ArrowRight") rightPressed = true;
+    else if (e.key === "Left" || e.key === "ArrowLeft") leftPressed = true;
+    else if (e.key === " " || e.key === "Spacebar") {
+      e.preventDefault();
+      if (state === STATE.RUNNING || state === STATE.PAUSED) togglePause();
+    }
+  });
+
+  document.addEventListener("keyup", function (e) {
+    if (e.key === "Right" || e.key === "ArrowRight") rightPressed = false;
+    else if (e.key === "Left" || e.key === "ArrowLeft") leftPressed = false;
+  });
+
+  function pointerToPaddle(clientX) {
+    var rect = canvas.getBoundingClientRect();
+    var scale = LOGICAL_WIDTH / rect.width;
+    var relativeX = (clientX - rect.left) * scale;
+    if (relativeX > 0 && relativeX < LOGICAL_WIDTH) {
+      paddleX = relativeX - paddleWidth / 2;
+      if (paddleX < 0) paddleX = 0;
+      if (paddleX + paddleWidth > LOGICAL_WIDTH) paddleX = LOGICAL_WIDTH - paddleWidth;
+    }
+  }
+
+  canvas.addEventListener("mousemove", function (e) {
+    if (state === STATE.RUNNING) pointerToPaddle(e.clientX);
+  });
+
+  canvas.addEventListener("touchmove", function (e) {
+    if (state === STATE.RUNNING && e.touches.length > 0) {
+      pointerToPaddle(e.touches[0].clientX);
+      e.preventDefault();
+    }
+  }, { passive: false });
+
+  // ---------- Button wiring ----------
+  btnStart.addEventListener("click", startGame);
+  btnPause.addEventListener("click", togglePause);
+  btnRestart.addEventListener("click", restartGame);
+
+  btnOverlayStart.addEventListener("click", startGame);
+  btnOverlayResume.addEventListener("click", togglePause);
+  btnOverlayRestartFromLoss.addEventListener("click", restartGame);
+  btnOverlayNext.addEventListener("click", nextLevel);
+
+  // ---------- Initial paint ----------
+  buildBricks();
+  resetBallAndPaddle();
+  updateHud();
+  clear();
+  drawBricks();
+  drawPaddle();
+  drawBall();
+  setButtonsForState();
+
+})();</script></body></html>
