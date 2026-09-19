@@ -52,6 +52,19 @@ Designed with a **Neon Red Gaming UI** featuring glowing borders, dark backgroun
 
 ---
 
+## 🎮 Try the Game
+
+<div align="center">
+
+[![🎮 Play Brick Breaker](https://img.shields.io/badge/🎮%20TRY%20THE%20GAME-FF1E1E?style=for-the-badge\&logo=gamejolt\&logoColor=white)](https://vinaygunti-41.github.io/Brick-Breaker/)[![🌐 Live Demo](https://img.shields.io/badge/🌐%20LIVE%20DEMO-8B0000?style=for-the-badge\&logo=googlechrome\&logoColor=white)](https://vinaygunti-41.github.io/Brick-Breaker/)
+
+https://universal-violet-adka1qcu.edgeone.dev/
+
+</div>
+
+
+---
+
 <div align="center">
 
 ##  Designed & Developed by Vinay
