@@ -17,7 +17,7 @@
 
 ---
 
-## 🕹️ About The Project
+## 🕹️ About The Projects
 
 **Brick Breaker** is a classic arcade-style game built using **HTML, CSS, and JavaScript**. Control the paddle, bounce the ball, destroy all the bricks, and achieve the highest score.
 
